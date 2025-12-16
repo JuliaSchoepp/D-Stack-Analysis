@@ -98,7 +98,7 @@ def postprocess_issues(df: pl.DataFrame) -> pl.DataFrame:
     )
     
     # Exclude certain pages
-    exclude_pages = ['/beteiligung?utm_source=chatgpt.com', '/wtf']
+    exclude_pages = ['/beteiligung?utm_source=chatgpt.com', '/wtf', '/landkarte/ Tech-Stack Aufnahmekriterien & Prozess']
     df = df.filter(~pl.col("form_page").is_in(exclude_pages))
     
     # Clean form_page: remove trailing / unless it's "/", then replace with "home"

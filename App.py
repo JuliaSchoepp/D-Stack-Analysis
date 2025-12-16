@@ -3,8 +3,10 @@ import polars as pl
 
 DATA_PATH = "data/issues_postprocessed.parquet"
 
-st.title("D-Stack Analytics")
-st.header("Analyse der im Konsultationsprozess eingereichten Feedback-Issues")
+st.title("D-Stack Feedback Analytics")
+st.text("""
+Interaktive Analyse von Nutzer-Feedback Issues, die über das D-Stack Formular eingereicht wurden.
+Labels und Sentiment Scores wurden mit Hilfe von NLP / GenAI Modellen automatisch zugewiesen.""")
 
 @st.cache_data
 def load_data() -> pl.DataFrame:
@@ -79,6 +81,8 @@ with col2:
 with col3:
     st.metric("Anzahl der meldenden Personen", df["author_id"].n_unique())
 
+st.subheader("Zeitliche Verteilung der Issues")
+
 st.line_chart(
     df.group_by(pl.col("created_at").dt.date()).agg(pl.count()).sort("created_at").rename({"created_at": "Datum", "count": "Anzahl Issues"})
     .to_pandas().set_index("Datum")
@@ -86,13 +90,31 @@ st.line_chart(
 
 col1, col2, col3 = st.columns(3)
 
+st.subheader("Häufigkeit der Labels")
+
 st.bar_chart(
     df.explode("labels").group_by("labels").agg(pl.count()).sort("count", descending=True).rename({"labels": "Label", "count": "Anzahl Issues"})
     .to_pandas().set_index("Label")
 )
 
+st.subheader("Einreichung über Formular erfolgt?")
+
 st.bar_chart(
     df.group_by("is_from_form").agg(pl.count()).rename({"is_from_form": "Formular", "count": "Anzahl Issues"})
     .to_pandas().set_index("Formular")
+)
+
+st.subheader("Durchschnittlicher Sentiment nach Label")
+
+st.bar_chart(
+    df.explode("labels").group_by("labels").agg(pl.col("sentiment").mean()).sort("sentiment").rename({"labels": "Label", "sentiment": "Durchschnittlicher Sentiment"})
+    .to_pandas().set_index("Label")
+)
+
+st.subheader("Durchschnittlicher Sentiment nach Seite")
+
+st.bar_chart(
+    df.group_by("form_page").agg(pl.col("sentiment").mean()).sort("sentiment").rename({"form_page": "Seite", "sentiment": "Durchschnittlicher Sentiment"})
+    .to_pandas().set_index("Seite")
 )
 

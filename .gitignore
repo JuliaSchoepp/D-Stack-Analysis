@@ -1,3 +1,5 @@
 *.env
 .venv
 *.parquet
+__pycache__
+.DS_STORE

@@ -1,0 +1,7 @@
+streamlit
+polars
+requests
+python-dotenv
+google-cloud-language
+google-genai
+pandas

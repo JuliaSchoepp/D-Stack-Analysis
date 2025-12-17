@@ -1,6 +1,8 @@
 import streamlit as st
 import polars as pl
 
+st.image("D64 Logo.png", width=150)
+
 DATA_PATH = "data/issues_postprocessed.parquet"
 
 st.title("D-Stack Feedback Analytics")
@@ -34,6 +36,8 @@ st.slider(
     step=0.1,
     key="sentiment_filter"
 )
+
+st.divider()
 
 st.subheader("Stichproben der Issues")
 
@@ -91,9 +95,9 @@ st.subheader("Zeitliche Verteilung der Issues")
 
 st.line_chart(
     df.group_by(pl.col("created_at").dt.date())
-    .agg(pl.count())
+    .agg(pl.len())
     .sort("created_at")
-    .rename({"created_at": "Datum", "count": "Anzahl Issues"})
+    .rename({"created_at": "Datum", "len": "Anzahl Issues"})
     .to_pandas()
     .set_index("Datum")
 )
@@ -102,14 +106,14 @@ col1, col2, col3 = st.columns(3)
 
 st.subheader("Häufigkeit der Labels")
 st.bar_chart(
-    df.explode("labels").group_by("labels").agg(pl.count()).sort("count", descending=True).rename({"labels": "Label", "count": "Anzahl Issues"})
+    df.explode("labels").group_by("labels").agg(pl.len()).sort("len", descending=True).rename({"labels": "Label", "len": "Anzahl Issues"})
     .to_pandas().set_index("Label")
     , sort = False
 )
 
 st.subheader("Einreichung über Formular erfolgt?")
 st.bar_chart(
-    df.group_by("is_from_form").agg(pl.count()).sort("count", descending=True).rename({"is_from_form": "Formular", "count": "Anzahl Issues"})
+    df.group_by("is_from_form").agg(pl.len()).sort("len", descending=True).rename({"is_from_form": "Formular", "len": "Anzahl Issues"})
     .to_pandas().set_index("Formular")
     , sort = False
 )

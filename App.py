@@ -46,21 +46,27 @@ df = df.filter(
 ).filter(
     (pl.col("sentiment") >= st.session_state.sentiment_filter[0]) & 
     (pl.col("sentiment") <= st.session_state.sentiment_filter[1])
+).filter(
+    pl.col("author_name").is_in(st.session_state.author_filter) if "author_filter" in st.session_state and st.session_state.author_filter else pl.lit(True)
+).filter(
+    pl.col("desc_clean").str.to_lowercase().str.contains(st.session_state.search_term.lower()) if "search_term" in st.session_state and st.session_state.search_term else pl.lit(True)
 )
 
 sample = df.sample(1) if df.height > 0 else pl.DataFrame(schema=df.schema)
 if sample.height > 0:
     row = sample.row(0, named=True)
     st.markdown(f"""
-**Title:** {row['title']}
+**Titel:** {row['title']}
 
-**Description:** {row['desc_clean']}
+**Inhalt:** {row['desc_clean']}
 
-**Form Page:** {row['form_page']}
+**Aus Seite:** {row['form_page']}
 
 **Labels:** {', '.join(row['labels']) if row['labels'] else 'None'}
 
 **Sentiment:** {row['sentiment']:.2f}
+
+**Eingereicht von:** {row['author_name']}
 """)
 else:
     st.markdown("No issues match the current filters.")
@@ -84,37 +90,65 @@ with col3:
 st.subheader("Zeitliche Verteilung der Issues")
 
 st.line_chart(
-    df.group_by(pl.col("created_at").dt.date()).agg(pl.count()).sort("created_at").rename({"created_at": "Datum", "count": "Anzahl Issues"})
-    .to_pandas().set_index("Datum")
+    df.group_by(pl.col("created_at").dt.date())
+    .agg(pl.count())
+    .sort("created_at")
+    .rename({"created_at": "Datum", "count": "Anzahl Issues"})
+    .to_pandas()
+    .set_index("Datum")
 )
 
 col1, col2, col3 = st.columns(3)
 
 st.subheader("Häufigkeit der Labels")
-
 st.bar_chart(
     df.explode("labels").group_by("labels").agg(pl.count()).sort("count", descending=True).rename({"labels": "Label", "count": "Anzahl Issues"})
     .to_pandas().set_index("Label")
+    , sort = False
 )
 
 st.subheader("Einreichung über Formular erfolgt?")
-
 st.bar_chart(
-    df.group_by("is_from_form").agg(pl.count()).rename({"is_from_form": "Formular", "count": "Anzahl Issues"})
+    df.group_by("is_from_form").agg(pl.count()).sort("count", descending=True).rename({"is_from_form": "Formular", "count": "Anzahl Issues"})
     .to_pandas().set_index("Formular")
+    , sort = False
 )
 
 st.subheader("Durchschnittlicher Sentiment nach Label")
-
 st.bar_chart(
-    df.explode("labels").group_by("labels").agg(pl.col("sentiment").mean()).sort("sentiment").rename({"labels": "Label", "sentiment": "Durchschnittlicher Sentiment"})
+    df.explode("labels").group_by("labels").agg(pl.col("sentiment").mean()).sort("sentiment", descending=True).rename({"labels": "Label", "sentiment": "Durchschnittlicher Sentiment"})
     .to_pandas().set_index("Label")
+    , sort = False
 )
 
 st.subheader("Durchschnittlicher Sentiment nach Seite")
-
 st.bar_chart(
-    df.group_by("form_page").agg(pl.col("sentiment").mean()).sort("sentiment").rename({"form_page": "Seite", "sentiment": "Durchschnittlicher Sentiment"})
-    .to_pandas().set_index("Seite")
+    df.group_by("form_page").agg(pl.col("sentiment").mean()).rename({"form_page": "Seite", "sentiment": "Durchschnittlicher Sentiment"})
+    .to_pandas().set_index("Seite").sort_values("Durchschnittlicher Sentiment", ascending=False)
+    , sort = False
 )
 
+st.divider()
+
+st.subheader("Autor*innen der Issues")
+
+st.dataframe(
+    df.group_by("author_name").agg(pl.len().alias("Anzahl Issues")).sort("Anzahl Issues", descending=True)
+)
+
+st.multiselect(
+    "Filter nach Autor*in",
+    options=sorted(df["author_name"].unique().to_list()),
+    key="author_filter"
+)
+
+st.divider()
+
+st.subheader("Stichwortsuche")
+
+st.text("Du suchst nach einem Thema, das nicht über die Labels abgedeckt ist? ")
+
+st.text_input(
+    "Suchbegriff",
+    key="search_term"
+)

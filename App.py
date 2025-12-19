@@ -7,7 +7,7 @@ DATA_PATH = "data/issues_postprocessed.parquet"
 
 st.title("D-Stack Feedback Analytics")
 st.text("""
-Interaktive Analyse von Nutzer-Feedback Issues, die über das D-Stack Formular eingereicht wurden.
+Interaktive Analyse von Feedback-Einreichungen, die im Rahmen des Konsultationsprozess zum Deutschland-Stack erstellt wurden.
 Labels und Sentiment Scores wurden mit Hilfe von NLP / GenAI Modellen automatisch zugewiesen.""")
 
 @st.cache_data

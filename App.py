@@ -8,9 +8,27 @@ LABELS_VERSION = 1
 LABELS_COLUMN = f"labels_v{LABELS_VERSION}"
 
 st.title("D-Stack Feedback Analytics")
-st.text("""
-Interaktive Analyse von Feedback-Einreichungen, die im Rahmen des Konsultationsprozess zum Deutschland-Stack erstellt wurden.
-Labels und Sentiment Scores wurden mit Hilfe von NLP / GenAI Modellen automatisch zugewiesen.""")
+st.markdown("""
+### Über das Projekt
+Ende November endete die Konsultationsphase zum [Deutschland-Stack](https://deutschland-stack.gov.de/). Für alle, die keine Lust haben, [alle knapp 500 Beiträge](https://gitlab.opencode.de/dstack/d-stack-home/-/issues?sort=created_date&state=all&first_page_size=20&show=eyJpaWQiOiI0OTIiLCJmdWxsX3BhdGgiOiJkc3RhY2svZC1zdGFjay1ob21lIiwiaWQiOjQzMjc5fQ%3D%3D) zu lesen, 
+sich trotzdem einen Eindruck vom eingereichten Feedback verschaffen wollen, haben wir dieses Tool geschaffen.
+Das Projekt begann als interne Initiative einer Gruppe von [D64-Mitgliedern](https://d-64.org/), die den Konsultationsprozess mitverfolgt haben und das Feedback besser verstehen wollten.
+Wir wollen es allen Interessierten ermöglichen, komfortabel durch das eingereichte Feedback zu navigieren und Einblicke in die Themen und Stimmungen der Beiträge zu gewinnen.
+
+### Methodik
+Die hier präsentierten Analysen basieren auf den öffentlich zugänglichen Issues des [GitLab-Projekts zum Deutschland-Stack](https://gitlab.opencode.de/dstack/d-stack-home).
+Wir haben alle Issues heruntergeladen und bereinigt.
+Darüber hinaus haben wir die Issues mit Hilfe von NLP und GenAI-Modellen um folgende Attribute angereichert:
+- **Themen-Labels:** Jedes Issue wurde mit thematischen Labels versehen, um die Kategorisierung zu erleichtern.
+- **Sentiment-Analyse:** Jedes Issue wurde auf seine Stimmung hin analysiert, um positive, negative oder neutrale Tendenzen zu identifizieren.
+- **Organisationszuordnung:** Wo möglich, wurde versucht, die hinter den Issues stehenden Organisationen zu identifizieren.
+
+Die mit Hilfe von KI generierten Attribute können wie immer Fehler und Ungenauigkeiten enthalten.
+""")
+
+st.divider()
+
+st.subheader("Filtermöglichkeiten")
 
 @st.cache_data
 def load_data() -> pl.DataFrame:
@@ -37,6 +55,18 @@ st.slider(
     value=(-1.0, 1.0),
     step=0.1,
     key="sentiment_filter"
+)
+
+st.multiselect(
+    "Filter nach Autor*in",
+    options=sorted(df["author_name"].unique().to_list()),
+    key="author_filter"
+)
+
+st.multiselect(
+    "Filter nach Organisation",
+    options=sorted(df["org"].unique().to_list()),
+    key="org_filter"
 )
 
 st.divider()
@@ -150,12 +180,6 @@ with col1:
             .sort("Anzahl Issues", descending=True)
     )
 
-    st.multiselect(
-        "Filter nach Autor*in",
-        options=sorted(df["author_name"].unique().to_list()),
-        key="author_filter"
-    )
-
 with col2:
     st.subheader("Organisation hinter Issues")
 
@@ -164,12 +188,6 @@ with col2:
         .agg(pl.len().alias("Anzahl Issues"))
         .rename({"org": "Organisation"})
         .sort("Anzahl Issues", descending=True)
-    )
-
-    st.multiselect(
-        "Filter nach Organisation",
-        options=sorted(df["org"].unique().to_list()),
-        key="org_filter"
     )
 
 st.divider()

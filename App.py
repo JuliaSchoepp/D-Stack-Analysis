@@ -44,7 +44,7 @@ st.multiselect(
 
 st.multiselect(
     "Filter nach Seite",
-    options=df["form_page"].unique().to_list(),
+    options=sorted(df["form_page"].unique().drop_nulls().to_list()),
     key="page_filter"
 )
 
@@ -59,13 +59,13 @@ st.slider(
 
 st.multiselect(
     "Filter nach Autor*in",
-    options=sorted(df["author_name"].unique().to_list()),
+    options=sorted(df["author_name"].unique().drop_nulls().to_list()),
     key="author_filter"
 )
 
 st.multiselect(
     "Filter nach Organisation",
-    options=sorted(df["org"].unique().to_list()),
+    options=sorted(df["org"].unique().drop_nulls().to_list()),
     key="org_filter"
 )
 
@@ -89,6 +89,13 @@ df = df.filter(
 ).filter(
     pl.col("org").is_in(st.session_state.org_filter) if "org_filter" in st.session_state and st.session_state.org_filter else pl.lit(True)
 )
+
+if df.height == 0:
+    st.warning(
+        "Keine Issues entsprechen der aktuellen Filterkombination. Bitte passe die Filter an."
+    )
+    st.stop()
+
 
 sample = df.sample(1) if df.height > 0 else pl.DataFrame(schema=df.schema)
 if sample.height > 0:

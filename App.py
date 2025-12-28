@@ -4,6 +4,8 @@ import polars as pl
 st.image("D64 Logo.png", width=150)
 
 DATA_PATH = "data/issues_postprocessed.parquet"
+LABELS_VERSION = 1
+LABELS_COLUMN = f"labels_v{LABELS_VERSION}"
 
 st.title("D-Stack Feedback Analytics")
 st.text("""
@@ -18,7 +20,7 @@ df = load_data()
 
 st.multiselect(
     "Filter nach Labels",
-    options=df.explode("labels")["labels"].unique().drop_nulls().sort().to_list(),
+    options=df.explode(LABELS_COLUMN)[LABELS_COLUMN].unique().drop_nulls().sort().to_list(),
     key="label_filter"
 )
 
@@ -44,7 +46,7 @@ st.subheader("Stichproben der Issues")
 st.button("Neue Stichprobe ziehen")
 
 df = df.filter(
-    pl.all_horizontal([pl.col("labels").list.contains(label) for label in st.session_state.label_filter]) if st.session_state.label_filter else pl.lit(True)
+    pl.all_horizontal([pl.col(LABELS_COLUMN).list.contains(label) for label in st.session_state.label_filter]) if st.session_state.label_filter else pl.lit(True)
 ).filter(
     pl.col("form_page").is_in(st.session_state.page_filter) if st.session_state.page_filter else pl.lit(True)
 ).filter(
@@ -54,6 +56,8 @@ df = df.filter(
     pl.col("author_name").is_in(st.session_state.author_filter) if "author_filter" in st.session_state and st.session_state.author_filter else pl.lit(True)
 ).filter(
     pl.col("desc_clean").str.to_lowercase().str.contains(st.session_state.search_term.lower()) if "search_term" in st.session_state and st.session_state.search_term else pl.lit(True)
+).filter(
+    pl.col("org").is_in(st.session_state.org_filter) if "org_filter" in st.session_state and st.session_state.org_filter else pl.lit(True)
 )
 
 sample = df.sample(1) if df.height > 0 else pl.DataFrame(schema=df.schema)
@@ -66,7 +70,7 @@ if sample.height > 0:
 
 **Aus Seite:** {row['form_page']}
 
-**Labels:** {', '.join(row['labels']) if row['labels'] else 'None'}
+**Labels:** {', '.join(row[LABELS_COLUMN]) if row[LABELS_COLUMN] else 'None'}
 
 **Sentiment:** {row['sentiment']:.2f}
 
@@ -106,7 +110,7 @@ col1, col2, col3 = st.columns(3)
 
 st.subheader("Häufigkeit der Labels")
 st.bar_chart(
-    df.explode("labels").group_by("labels").agg(pl.len()).sort("len", descending=True).rename({"labels": "Label", "len": "Anzahl Issues"})
+    df.explode(LABELS_COLUMN).group_by(LABELS_COLUMN).agg(pl.len()).sort("len", descending=True).rename({LABELS_COLUMN: "Label", "len": "Anzahl Issues"})
     .to_pandas().set_index("Label")
     , sort = False
 )
@@ -120,7 +124,7 @@ st.bar_chart(
 
 st.subheader("Durchschnittlicher Sentiment nach Label")
 st.bar_chart(
-    df.explode("labels").group_by("labels").agg(pl.col("sentiment").mean()).sort("sentiment", descending=True).rename({"labels": "Label", "sentiment": "Durchschnittlicher Sentiment"})
+    df.explode(LABELS_COLUMN).group_by(LABELS_COLUMN).agg(pl.col("sentiment").mean()).sort("sentiment", descending=True).rename({LABELS_COLUMN: "Label", "sentiment": "Durchschnittlicher Sentiment"})
     .to_pandas().set_index("Label")
     , sort = False
 )
@@ -134,17 +138,39 @@ st.bar_chart(
 
 st.divider()
 
-st.subheader("Autor*innen der Issues")
+col1, col2 = st.columns(2)
 
-st.dataframe(
-    df.group_by("author_name").agg(pl.len().alias("Anzahl Issues")).sort("Anzahl Issues", descending=True)
-)
+with col1:
+    st.subheader("Autor*innen der Issues")
 
-st.multiselect(
-    "Filter nach Autor*in",
-    options=sorted(df["author_name"].unique().to_list()),
-    key="author_filter"
-)
+    st.dataframe(
+        df.group_by("author_name")
+            .agg(pl.len().alias("Anzahl Issues"))
+            .rename({"author_name": "Autor*in"})
+            .sort("Anzahl Issues", descending=True)
+    )
+
+    st.multiselect(
+        "Filter nach Autor*in",
+        options=sorted(df["author_name"].unique().to_list()),
+        key="author_filter"
+    )
+
+with col2:
+    st.subheader("Organisation hinter Issues")
+
+    st.dataframe(
+        df.group_by("org")
+        .agg(pl.len().alias("Anzahl Issues"))
+        .rename({"org": "Organisation"})
+        .sort("Anzahl Issues", descending=True)
+    )
+
+    st.multiselect(
+        "Filter nach Organisation",
+        options=sorted(df["org"].unique().to_list()),
+        key="org_filter"
+    )
 
 st.divider()
 

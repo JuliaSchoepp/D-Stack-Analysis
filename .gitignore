@@ -1,5 +1,8 @@
 *.env
 .venv
-*.parquet
+data/raw_issues.parquet
+data/issues_labeled.parquet
+data/issues_org_attributed.parquet
+data/issues_enriched.parquet
 __pycache__
 .DS_STORE

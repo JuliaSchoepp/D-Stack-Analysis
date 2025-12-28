@@ -82,7 +82,7 @@ def prepare_issues_df(df: pl.DataFrame, desc_to_exclude: list) -> pl.DataFrame:
     df = df.filter(~pl.col("desc_clean").is_in(desc_to_exclude))
     return df
 
-def postprocess_issues(df: pl.DataFrame) -> pl.DataFrame:
+def postprocess_issues(df: pl.DataFrame, label_version: int) -> pl.DataFrame:
     """
     Postprocess the labeled issues DataFrame.
     - Add "Unklar" label where labels is empty
@@ -91,10 +91,10 @@ def postprocess_issues(df: pl.DataFrame) -> pl.DataFrame:
     """
     # Add "Unklar" to empty labels
     df = df.with_columns(
-        pl.when(pl.col("labels").list.len() == 0)
+        pl.when(pl.col(f"labels_v{label_version}").list.len() == 0)
         .then(pl.lit(["Unklar"]))
-        .otherwise(pl.col("labels"))
-        .alias("labels")
+        .otherwise(pl.col(f"labels_v{label_version}"))
+        .alias(f"labels_v{label_version}")
     )
     
     # Exclude certain pages

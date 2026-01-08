@@ -188,7 +188,7 @@ with col1:
     )
 
 with col2:
-    st.subheader("Organisation hinter Issues")
+    st.subheader("Erwähnte Organisation")
 
     st.dataframe(
         df.group_by("org")

@@ -1,7 +1,12 @@
 import streamlit as st
 import polars as pl
 
-st.image("D64 Logo.png", width=150)
+st.set_page_config(
+    page_title="D-Stack Analytics",
+    page_icon="D64_Logo.svg"
+)
+
+st.image("D64_Logo.svg", width=180)
 
 DATA_PATH = "data/issues_postprocessed.parquet"
 LABELS_VERSION = 1
@@ -21,7 +26,7 @@ Wir haben alle Issues heruntergeladen und bereinigt.
 Darüber hinaus haben wir die Issues mit Hilfe von NLP und GenAI-Modellen um folgende Attribute angereichert:
 - **Themen-Labels:** Jedes Issue wurde mit thematischen Labels versehen, um die Kategorisierung zu erleichtern.
 - **Sentiment-Analyse:** Jedes Issue wurde auf seine Stimmung hin analysiert, um positive, negative oder neutrale Tendenzen zu identifizieren.
-- **Organisationszuordnung:** Wo möglich, wurde versucht, die hinter den Issues stehenden Organisationen zu identifizieren.
+- **Organisationszuordnung:** Wo möglich, wurde versucht, die hinter den Issues stehenden Organisationen zu identifizieren, z.B. wenn diese explizit erwähnt oder in ihrem Namen unterschrieben wurde. 
 
 Die mit Hilfe von KI generierten Attribute können wie immer Fehler und Ungenauigkeiten enthalten.
 """)

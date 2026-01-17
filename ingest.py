@@ -98,19 +98,9 @@ def save_run_metadata(metadata: dict):
 
 
 def upload_to_gcs(partition_path: Path, bucket_name: str = "dstack-feedback") -> bool:
-    """Upload partition to GCS bucket."""
+    """Upload partition to GCS bucket using Application Default Credentials."""
     try:
-        creds_json = os.environ.get("GCP_CREDENTIALS")
-        if not creds_json:
-            logger.warning("GCP_CREDENTIALS not set, skipping GCS upload")
-            return False
-        
-        # Parse credentials from JSON string
-        import tempfile
-        creds_dict = json.loads(creds_json)
-        
-        # Create client with credentials
-        client = storage.Client.from_service_account_info(creds_dict)
+        client = storage.Client(project=PROJECT_ID)
         bucket = client.bucket(bucket_name)
         
         # Upload the parquet file
@@ -143,7 +133,6 @@ def init_sentiment_client():
 def init_genai_client():
     """Initialize Vertex AI GenAI client for labeling and attribution."""
     try:
-        # Explicitly pass Project ID and Location
         return genai.Client(
             vertexai=True,
             project=PROJECT_ID,
@@ -151,6 +140,8 @@ def init_genai_client():
         )
     except Exception as e:
         logger.error(f"Failed to initialize GenAI client: {e}")
+        # Log the environment for debugging if it fails
+        logger.info(f"ADC Path: {os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')}")
         raise
 
 

@@ -143,7 +143,12 @@ def init_sentiment_client():
 def init_genai_client():
     """Initialize Vertex AI GenAI client for labeling and attribution."""
     try:
-        return genai.Client(vertexai=True)
+        # Explicitly pass Project ID and Location
+        return genai.Client(
+            vertexai=True,
+            project=PROJECT_ID,
+            location=LOCATION
+        )
     except Exception as e:
         logger.error(f"Failed to initialize GenAI client: {e}")
         raise

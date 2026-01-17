@@ -19,10 +19,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Set up GCP credentials
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > $HOME/gcp-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
       - name: Install dependencies
         run: |

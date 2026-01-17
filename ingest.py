@@ -18,8 +18,11 @@ from pathlib import Path
 import polars as pl
 from dotenv import load_dotenv
 from google import genai
+from google.auth import default
+from google.auth.transport.requests import Request
 from google.cloud import language_v2, storage
 from google.genai import types
+from google.oauth2 import service_account
 
 import utils as u
 
@@ -131,14 +134,7 @@ def upload_to_gcs(partition_path: Path, bucket_name: str = "dstack-feedback") ->
 def init_sentiment_client():
     """Initialize Google Cloud Language API client for sentiment analysis."""
     try:
-        # Use service account credentials from environment
-        creds_json = os.environ.get("GCP_CREDENTIALS")
-        if creds_json:
-            creds_dict = json.loads(creds_json)
-            return language_v2.LanguageServiceClient.from_service_account_info(creds_dict)
-        else:
-            # Fallback to default credentials
-            return language_v2.LanguageServiceClient()
+        return language_v2.LanguageServiceClient()
     except Exception as e:
         logger.error(f"Failed to initialize sentiment client: {e}")
         raise

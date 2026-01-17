@@ -49,7 +49,7 @@ POSTPROCESSED_PATH.mkdir(exist_ok=True)
 RUN_METADATA_PATH = DATA_DIR / "run_metadata.json"
 
 PROJECT_ID = "project-8415b93b-4a16-4c2b-901"
-LOCATION = "europe-west3"
+LOCATION = "us-central1"
 MODEL = "gemini-2.0-flash"
 
 BATCH_SIZE = 10
@@ -88,13 +88,16 @@ def load_run_metadata() -> dict:
     return {"last_successful_run": None, "last_fetched_issues": 0}
 
 
-def save_run_metadata(metadata: dict):
-    """Save metadata from current run."""
+def save_run_metadata(metadata: dict, bucket_name: str = "dstack-feedback"):
+    """Save metadata from current run to GCS."""
     try:
-        with open(RUN_METADATA_PATH, 'w') as f:
-            json.dump(metadata, f, indent=2)
+        client = storage.Client(project=PROJECT_ID)
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob("data/run_metadata.json")
+        blob.upload_from_string(json.dumps(metadata, indent=2), content_type="application/json")
+        logger.info("Saved run_metadata.json to GCS.")
     except Exception as e:
-        logger.error(f"Failed to save run metadata: {e}")
+        logger.error(f"Failed to save run metadata to GCS: {e}")
 
 
 def upload_to_gcs(partition_path: Path, bucket_name: str = "dstack-feedback") -> bool:
@@ -419,7 +422,7 @@ def main():
             "last_fetched_issues": len(issues),
             "total_issues_processed": len(df_postprocessed)
         }
-        save_run_metadata(metadata)
+        save_run_metadata(metadata, bucket_name="dstack-feedback")
         logger.info(f"Metadata saved. Next run will process issues created after {metadata['last_successful_run']}")
 
         return True

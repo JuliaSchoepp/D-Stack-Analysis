@@ -273,6 +273,15 @@ st.text_input(
 
 st.divider()
 
+st.subheader("Contribute")
+
+st.markdown("""
+Dieses Projekt ist Open Source und auf [GitHub](https://github.com/JuliaSchoepp/D-Stack-Analysis) verfügbar.
+Contributions sind willkommen! Falls du Verbesserungen, Bug-Fixes oder neue Features hast, öffne gerne einen Pull Request.
+""")
+
+st.divider()
+
 st.subheader("Impressum")
 
 st.markdown("""

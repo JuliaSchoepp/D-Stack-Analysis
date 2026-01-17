@@ -44,7 +44,7 @@ def load_data() -> pl.DataFrame:
     """Load all partitioned issue data from GCS bucket."""
     try:
         # Use anonymous credentials (bucket is public)
-        client = storage.Client(project="project-8415b93b-4a16-4c2b-901")
+        client = storage.Client.create_anonymous_client()
         bucket = client.bucket(GCS_BUCKET)
         
         dfs = []

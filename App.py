@@ -87,6 +87,10 @@ def load_data() -> pl.DataFrame:
 
 df = load_data()
 
+if df.is_empty():
+    st.error("No data loaded. Please check GCS connection or ensure data files exist.")
+    st.stop()
+
 st.multiselect(
     "Filter nach Labels",
     options=df.explode(LABELS_COLUMN)[LABELS_COLUMN].unique().drop_nulls().sort().to_list(),

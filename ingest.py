@@ -18,11 +18,8 @@ from pathlib import Path
 import polars as pl
 from dotenv import load_dotenv
 from google import genai
-from google.auth import default
-from google.auth.transport.requests import Request
 from google.cloud import language_v2, storage
 from google.genai import types
-from google.oauth2 import service_account
 
 import utils as u
 
@@ -77,15 +74,22 @@ logger.info(f"Loaded {len(LABELS)} labels from {KEYWORDS_PATH}")
 
 
 # Run Metadata Management
-def load_run_metadata() -> dict:
-    """Load metadata from last successful run."""
-    if RUN_METADATA_PATH.exists():
-        try:
-            with open(RUN_METADATA_PATH) as f:
-                return json.load(f)
-        except Exception as e:
-            logger.warning(f"Failed to load run metadata: {e}")
-    return {"last_successful_run": None, "last_fetched_issues": 0}
+def load_run_metadata(bucket_name: str = "dstack-feedback") -> dict:
+    """Load metadata from GCS, or return default if not found."""
+    try:
+        client = storage.Client(project=PROJECT_ID)
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob("data/run_metadata.json")
+        if blob.exists():
+            metadata = json.loads(blob.download_as_text())
+            logger.info("Loaded run_metadata.json from GCS.")
+            return metadata
+        else:
+            logger.info("No run_metadata.json found in GCS, using default.")
+            return {"last_successful_run": "2025-12-31T23:59:59Z", "last_fetched_issues": 0}
+    except Exception as e:
+        logger.warning(f"Failed to load run metadata from GCS: {e}")
+        return {"last_successful_run": None, "last_fetched_issues": 0}
 
 
 def save_run_metadata(metadata: dict, bucket_name: str = "dstack-feedback"):
@@ -340,7 +344,7 @@ def main():
     logger.info("Starting D-Stack feedback ingestion pipeline")
     
     # Load metadata from last run
-    metadata = load_run_metadata()
+    metadata = load_run_metadata(bucket_name="dstack-feedback")
     last_run_iso = metadata.get("last_successful_run")
 
     try:

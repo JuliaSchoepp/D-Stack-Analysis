@@ -1,5 +1,8 @@
 import streamlit as st
 import polars as pl
+from pathlib import Path
+import io
+from google.cloud import storage
 
 st.set_page_config(
     page_title="D-Stack Analytics",
@@ -8,7 +11,8 @@ st.set_page_config(
 
 st.image("D64_Logo.svg", width=180)
 
-DATA_PATH = "data/issues_postprocessed.parquet"
+GCS_BUCKET = "dstack-feedback"
+GCS_PREFIX = "data/processing_date="
 LABELS_VERSION = 1
 LABELS_COLUMN = f"labels_v{LABELS_VERSION}"
 
@@ -37,7 +41,49 @@ st.subheader("Filtermöglichkeiten")
 
 @st.cache_data
 def load_data() -> pl.DataFrame:
-    return pl.read_parquet(DATA_PATH)   
+    """Load all partitioned issue data from GCS bucket."""
+    try:
+        # Use anonymous credentials (bucket is public)
+        client = storage.Client(project="project-8415b93b-4a16-4c2b-901")
+        bucket = client.bucket(GCS_BUCKET)
+        
+        dfs = []
+        for blob in bucket.list_blobs(prefix=GCS_PREFIX):
+            if blob.name.endswith("issues.parquet"):
+                try:
+                    parquet_bytes = blob.download_as_bytes()
+                    df = pl.read_parquet(io.BytesIO(parquet_bytes))
+                    dfs.append(df)
+                except Exception as e:
+                    st.warning(f"Failed to load {blob.name}: {e}")
+        
+        if not dfs:
+            st.warning("No data found in GCS bucket")
+            return pl.DataFrame()
+        
+    except Exception as e:
+        st.warning(f"GCS connection failed, trying local fallback: {e}")
+        # Fallback to local files for development
+        data_dir = Path("data/issues_postprocessed")
+        parquet_files = list(data_dir.glob("processing_date=*/issues.parquet"))
+        if parquet_files:
+            dfs = [pl.read_parquet(f) for f in parquet_files]
+        else:
+            return pl.DataFrame()
+    
+    # Align schemas across all partitions
+    all_columns = set()
+    for df in dfs:
+        all_columns.update(df.columns)
+    
+    aligned_dfs = []
+    for df in dfs:
+        missing_cols = all_columns - set(df.columns)
+        for col in missing_cols:
+            df = df.with_columns(pl.lit(None).alias(col))
+        aligned_dfs.append(df.select(sorted(all_columns)))
+    
+    return pl.concat(aligned_dfs).unique(subset=["iid"], keep="last")   
 
 df = load_data()
 
@@ -74,6 +120,12 @@ st.multiselect(
     key="org_filter"
 )
 
+st.multiselect(
+    "Filter nach Feedback-Runde",
+    options=sorted(df["feedback_round"].unique().drop_nulls().to_list()),
+    key="feedback_round_filter"
+)
+
 st.divider()
 
 st.subheader("Stichproben der Issues")
@@ -93,6 +145,8 @@ df = df.filter(
     pl.col("desc_clean").str.to_lowercase().str.contains(st.session_state.search_term.lower()) if "search_term" in st.session_state and st.session_state.search_term else pl.lit(True)
 ).filter(
     pl.col("org").is_in(st.session_state.org_filter) if "org_filter" in st.session_state and st.session_state.org_filter else pl.lit(True)
+).filter(
+    pl.col("feedback_round").is_in(st.session_state.feedback_round_filter) if "feedback_round_filter" in st.session_state and st.session_state.feedback_round_filter else pl.lit(True)
 )
 
 if df.height == 0:
@@ -212,3 +266,17 @@ st.text_input(
     "Suchbegriff",
     key="search_term"
 )
+
+st.divider()
+
+st.subheader("Impressum")
+
+st.markdown("""
+**Pflichtangaben gemäß § 5 DDG:**
+
+D64 – Zentrum für Digitalen Fortschritt e.V.  
+Chausseestraße 5  
+10115 Berlin  
+
+**E-Mail:** info (at) d-64.org
+""")

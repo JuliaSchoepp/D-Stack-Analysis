@@ -52,11 +52,21 @@ def clean_issues_df(df: pl.DataFrame, columns_to_use: list, rows_to_exclude: lis
         pl.col("author").struct.field("name").alias("author_name"),
         pl.col("author").struct.field("state").alias("author_state"),
     ])
+    
+    # Parse datetime columns - closed_at may be null for open issues
     df = df.with_columns([
-        pl.col("created_at").str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ").alias("created_at"),
-        pl.col("updated_at").str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ").alias("updated_at"),
-        pl.col("closed_at").str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ").alias("closed_at"),
+        pl.col("created_at").str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ"),
+        pl.col("updated_at").str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ"),
     ])
+    
+    # Handle closed_at which is null for open issues
+    if "closed_at" in df.columns:
+        df = df.with_columns([
+            pl.col("closed_at")
+            .cast(pl.String)
+            .str.strptime(pl.Datetime, format="%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
+        ])
+    
     df = df.filter(~pl.col("iid").is_in(rows_to_exclude))
     df = df.unique(subset=["title", "description"])
     return df.select(columns_to_use)

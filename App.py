@@ -285,11 +285,6 @@ st.divider()
 st.subheader("Impressum")
 
 st.markdown("""
-**Pflichtangaben gemäß § 5 DDG:**
-
-D64 – Zentrum für Digitalen Fortschritt e.V.  
-Chausseestraße 5  
-10115 Berlin  
-
-**E-Mail:** info (at) d-64.org
+**Impressum:**
+https://d-64.org/impressum
 """)

@@ -4,6 +4,8 @@
 
 Dieses Projekt analysiert die Feedback-Issues aus dem Deutschlandstack-Konsultationsprozess. So ist es möglich, einen Eindruck über das Feedback zum Deutschland-Stack zu gewinnen, ohne alle 500+ issues auf GitLab durchzuklicken.
 
+**Update**: Da das Konsultationsverfahren in eine zweite Runde gegangen ist werden fortlaufend einmal pro Nacht die aktuellen Issues von OpenCode abgefragt und ergänzt.
+
 ## Features
 
 - **Daten-Ingestion**: Lädt Issues aus GitLab und bereinigt sie.

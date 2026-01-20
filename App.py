@@ -95,13 +95,15 @@ if df.is_empty():
 st.multiselect(
     "Filter nach Labels",
     options=df.explode(LABELS_COLUMN)[LABELS_COLUMN].unique().drop_nulls().sort().to_list(),
-    key="label_filter"
+    key="label_filter",
+    placeholder="Optionen auswählen"
 )
 
 st.multiselect(
     "Filter nach Seite",
     options=sorted(df["form_page"].unique().drop_nulls().to_list()),
-    key="page_filter"
+    key="page_filter",
+    placeholder="Optionen auswählen"
 )
 
 st.slider(
@@ -116,19 +118,22 @@ st.slider(
 st.multiselect(
     "Filter nach Autor*in",
     options=sorted(df["author_name"].unique().drop_nulls().to_list()),
-    key="author_filter"
+    key="author_filter",
+    placeholder="Optionen auswählen"
 )
 
 st.multiselect(
     "Filter nach Organisation",
     options=sorted(df["org"].unique().drop_nulls().to_list()),
-    key="org_filter"
+    key="org_filter",
+    placeholder="Optionen auswählen"
 )
 
 st.multiselect(
     "Filter nach Feedback-Runde",
     options=sorted(df["feedback_round"].unique().drop_nulls().to_list()),
-    key="feedback_round_filter"
+    key="feedback_round_filter",
+    placeholder="Optionen auswählen"
 )
 
 st.divider()

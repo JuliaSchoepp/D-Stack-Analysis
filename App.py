@@ -20,7 +20,7 @@ st.title("D-Stack Feedback Analytics")
 st.markdown("""
 ### Über das Projekt
 Ende November endete die erste Konsultationsphase zum [Deutschland-Stack](https://deutschland-stack.gov.de/), und gerade geht das Projekt in die zweite Feedback-Runde.
-Für alle, die keine Lust haben, [alle knapp 500 Beiträge](https://gitlab.opencode.de/dstack/d-stack-home/-/issues?sort=created_date&state=all&first_page_size=20&show=eyJpaWQiOiI0OTIiLCJmdWxsX3BhdGgiOiJkc3RhY2svZC1zdGFjay1ob21lIiwiaWQiOjQzMjc5fQ%3D%3D) zu lesen, 
+Für alle, die keine Lust haben, [alle 500+ Beiträge](https://gitlab.opencode.de/dstack/d-stack-home/-/issues?sort=created_date&state=all&first_page_size=20&show=eyJpaWQiOiI0OTIiLCJmdWxsX3BhdGgiOiJkc3RhY2svZC1zdGFjay1ob21lIiwiaWQiOjQzMjc5fQ%3D%3D) zu lesen, 
 sich aber trotzdem einen Eindruck zum eingereichten Feedback verschaffen wollen, haben wir dieses Tool geschaffen.
 Das Projekt begann als interne Initiative einer Gruppe von [D64-Mitgliedern](https://d-64.org/), die den Konsultationsprozess mitverfolgt haben und das Feedback besser verstehen wollten.
 Wir wollen es allen Interessierten ermöglichen, komfortabel durch das eingereichte Feedback zu navigieren und Einblicke in die Themen und Stimmungen der Beiträge zu gewinnen.

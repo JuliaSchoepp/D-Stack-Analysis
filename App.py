@@ -40,7 +40,7 @@ st.divider()
 
 st.subheader("Filtermöglichkeiten")
 
-@st.cache_data
+@st.cache_data(ttl="1d")
 def load_data() -> pl.DataFrame:
     """Load all partitioned issue data from GCS bucket."""
     try:
